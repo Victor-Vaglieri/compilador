@@ -5,7 +5,7 @@
 Este compilador analisa a linguagem Pascal+- cuja sintaxe está descrita em notação EBNF. 
 
 - **Não-terminais** da gramática são representados entre parênteses angulares (`< >`).
-- **Terminais** (átomos do analisador léxico) estão em laranja ou entre aspas (e.g., `" ; "`).
+- **Terminais** (átomos do analisador léxico) estão em caixa alta ou entre aspas (e.g., `" ; "`).
 - **Notações especiais**:
   - `{ α }`: indica repetição de zero, uma ou mais vezes (`α*`).
   - `[ β ]`: representa que a cadeia `β` é opcional.
@@ -16,12 +16,12 @@ O símbolo inicial da gramática é `<programa>`.
 ### Gramática da Linguagem
 
 ```ebnf
-<programa> ::= program identificador “;” <bloco> “.”
+<programa> ::= PROGRAM IDENTIFICADOR “;” <bloco> “.”
 <bloco> ::= <declaracao_de_variaveis> <comando_composto>
 <declaracao_de_variaveis> ::= {<tipo> <lista_variavel> “;”}
-<tipo> ::= integer | boolean
-<lista_variavel> ::= identificador { “,” identificador }
-<comando_composto> ::= begin <comando> {“;”<comando>} end
+<tipo> ::= INTEGER | BOOLEAN
+<lista_variavel> ::= IDENTIFICADOR { “,” IDENTIFICADOR }
+<comando_composto> ::= BEGIN <comando> {“;”<comando>} END
 <comando> ::= 
     <comando_atribuicao> | 
     <comando_condicional> | 
@@ -29,23 +29,23 @@ O símbolo inicial da gramática é `<programa>`.
     <comando_entrada> | 
     <comando_saida> | 
     <comando_composto>
-<comando_atribuicao> ::= set identificador to <expressao>
-<comando_condicional> ::= if <expressao> “:” <comando> [elif <comando>]
-<comando_repeticao> ::= for identificador of <expressao> to <expressao> “:” <comando>
-<comando_entrada> ::= read “(“ <lista_variavel> “)”
-<comando_saida> ::= write “(“ <expressao> { “,” <expressao> } “)”
-<expressao> ::= <expressao_logica> { or <expressao_logica> }
-<expressao_logica> ::= <expressao_relacional> { and <expressao_relacional> }
+<comando_atribuicao> ::= SET IDENTIFICADOR TO <expressao>
+<comando_condicional> ::= IF <expressao> “:” <comando> [ELIF <comando>]
+<comando_repeticao> ::= FOR IDENTIFICADOR OF <expressao> TO <expressao> “:” <comando>
+<comando_entrada> ::= READ “(“ <lista_variavel> “)”
+<comando_saida> ::= WRITE “(“ <expressao> { “,” <expressao> } “)”
+<expressao> ::= <expressao_logica> { OR <expressao_logica> }
+<expressao_logica> ::= <expressao_relacional> { AND <expressao_relacional> }
 <expressao_relacional> ::= <expressao_simples> [<op_relacional> <expressao_simples>]
 <op_relacional> ::= “<” | “<=” | “=” | “/=” | “>” | “>=”
 <expressao_simples> ::= <termo> { (“+” | “−”) <termo> }
 <termo> ::= <fator> { ( “*” | “/” ) <fator> }
 <fator> ::= 
-    identificador | 
-    numero | 
-    true | 
-    false | 
-    not <fator> | 
+    IDENTIFICADOR | 
+    NUMERO | 
+    TRUE | 
+    FALSE | 
+    NOT <fator> | 
     “(“ <expressao> “)”
 ```
 ### Especificação Léxica
