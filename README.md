@@ -116,11 +116,9 @@ O compilador realiza a verificação semântica em dois momentos principais:
 - Sempre que uma variável for referenciada, o compilador verifica se ela foi **corretamente declarada**.  
   - **Erro Semântico**: Caso a variável não tenha sido declarada, o compilador é encerrado com uma mensagem explicativa.
 
-> **Nota**: Para simplificar a análise semântica e a geração de código intermediário, o compilador considera apenas variáveis e expressões do tipo **integer**.  
-Não são permitidas:
+**Nota**: Para simplificar a análise semântica e a geração de código intermediário, o compilador considera apenas variáveis e expressões do tipo **integer**. Não são permitidas:
 - Expressões mistas como `25+(x>y)`.
 - Atribuições de valores lógicos como `var=false`.
-
 
 ### Geração de Código Intermediário
 
