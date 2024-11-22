@@ -499,6 +499,10 @@ void consome(TAtomo atomo){
         //     printf("%d:%s\n",lookahead.linha,msgAtomo[lookahead.atomo]);
         // }
         lookahead = obter_atomo();
+        while (lookahead.atomo == COMENTARIO){ // enquanto indentificar um comentario o imprime porem o ignora 
+        // printf("%d:%s\n",lookahead.linha,msgAtomo[lookahead.atomo]);
+        lookahead = obter_atomo();
+    }
     } else { // caso não for igual indica um erro sintatico 
         printf("ERRO sintatico, encontrado [%s] esperado um [%s]\n",msgAtomo[lookahead.atomo],msgAtomo[atomo]);
         exit(0);
@@ -780,7 +784,6 @@ void programa(){
     consome(PROGRAM);
     consome(IDENTIFICADOR);
     consome(PONTO_VIRGULA);
-    printf("%s\n",msgAtomo[lookahead.atomo]); // TODO da merda quando tem "program ??; (comentario) integer...."
     printf("\tINPP\n");
     bloco();
     consome(PONTO);
