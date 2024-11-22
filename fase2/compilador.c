@@ -209,7 +209,7 @@ TInfoAtomo reconhece_id(){
             buffer++;
             goto q3;
         } else {
-            printf("ERRO Lexico, esperado caractere [b], encontrado [%c]\n",*buffer);
+            printf("ERRO Lexico, esperado caractere [b], encontrado [%c] na linha: %d\n",*buffer,linha);
             exit(0);
         }
     } else if (*buffer == '+'){ //  se o caractere for o simbolo de adição define atomo MAIS
@@ -356,11 +356,11 @@ TInfoAtomo reconhece_id(){
             goto q2;
         }
         if (buffer-iniID > 15){ // ver condição pra dar erro
-            printf("ERRO Lexico, Token com mais de 15 caracteres\n");
+            printf("ERRO Lexico, Token com mais de 15 caracteres na linha: %d\n",linha);
             exit(0);
         }
         if (isupper(*buffer)){
-            printf("ERRO Lexico, caractere [%c] em caixa alta\n",*buffer);
+            printf("ERRO Lexico, caractere [%c] em caixa alta na linha: %d\n",*buffer,linha);
             exit(0);
         }
         if (buffer > iniID) {
@@ -417,7 +417,7 @@ TInfoAtomo reconhece_id(){
             goto q3;
         } 
         if (isalpha(*buffer)){
-            printf("ERRO Lexico, esperado caractere [0|1], encontrado [%c]\n",*buffer);
+            printf("ERRO Lexico, esperado caractere [0|1], encontrado [%c] na linha: %d\n",*buffer, linha);
             exit(0);
         }
         if (buffer > iniID) {
@@ -446,7 +446,7 @@ TInfoAtomo reconhece_id(){
                 }while (!(*buffer == '-' && *(buffer + 1) == '}'));
                 buffer+=2;
             } else {
-                printf("ERRO Lexico, esperado caractere [-], encontrado [%c]\n",*buffer);
+                printf("ERRO Lexico, esperado caractere [-], encontrado [%c] na linha: %d\n",*buffer, linha);
                 exit(0);
                 return lookahead;
             }
@@ -480,7 +480,7 @@ TInfoAtomo obter_atomo(){
         strcpy(lookahead.atributo_ID,"\0");
         lookahead.atomo = EOS;
     } else {
-        printf("ERRO Lexico, este caractere encontrado [%c] não corresponde a gramatica \n",*buffer);
+        printf("ERRO Lexico, este caractere encontrado [%c] não corresponde a gramatica na linha: %d\n",*buffer,linha);
         exit(0);
     }
     lookahead.linha = linha;
@@ -502,7 +502,7 @@ void consome(TAtomo atomo){
             lookahead = obter_atomo();
         }
     } else { // caso não for igual indica um erro sintatico 
-        printf("ERRO sintatico, encontrado [%s] esperado um [%s]\n",msgAtomo[lookahead.atomo],msgAtomo[atomo]);
+        printf("ERRO sintatico, encontrado [%s] esperado um [%s] na linha: %d\n",msgAtomo[lookahead.atomo],msgAtomo[atomo],linha);
         exit(0);
     }
 
@@ -573,7 +573,7 @@ void fator(){
     if (lookahead.atomo == IDENTIFICADOR){
         consome(lookahead.atomo);
         if (busca_tabela_simbolos(temporario.atributo_ID) == -1){
-            printf("ERRO semantico, variavel \"%s\" não declarada\n",temporario.atributo_ID);
+            printf("ERRO semantico, variavel \"%s\" não declarada, na linha: %d\n",temporario.atributo_ID,linha);
             exit(0);
         }
         sprintf(format, "\tCRVL %d\n",busca_tabela_simbolos(temporario.atributo_ID));
@@ -682,7 +682,7 @@ void comando(){
         TInfoAtomo temporario = lookahead;
         consome(IDENTIFICADOR);
         if (busca_tabela_simbolos(temporario.atributo_ID) == -1){
-            printf("ERRO semantico, variavel \"%s\" não declarada\n",temporario.atributo_ID);
+            printf("ERRO semantico, variavel \"%s\" não declarada, na linha: %d\n",temporario.atributo_ID,linha);
             exit(0);
         }
         consome(TO);
@@ -718,7 +718,7 @@ void comando(){
         TInfoAtomo temporario = lookahead;
         consome(IDENTIFICADOR);
         if (busca_tabela_simbolos(temporario.atributo_ID) == -1){
-            printf("ERRO semantico, variavel \"%s\" não declarada\n",temporario.atributo_ID);
+            printf("ERRO semantico, variavel \"%s\" não declarada, na linha: %d\n",temporario.atributo_ID,linha);
             exit(0);
         }
         consome(OF);
