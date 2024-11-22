@@ -12,10 +12,16 @@ char *buffer = NULL; // string para o futuro arquivo
 int linhas_de_comentario = 0; // variavel para compensar comentarios de varias linhas
 
 
-char *variaveis[20];
-int rotulo = 1;
-int topo = 0;
+char *mepa = NULL; // TODO
+char *format = NULL; // TODO
 
+
+char *variaveis[20]; // lista de simbolos/variaveis
+int rotulo = 1; // valor inicial de rotulo
+int topo = 0; // valor que indica quantos elementos exsitem na lista de simbolos
+
+
+// função que imprime a lista de simbolos
 void lista_tabela(){
     printf("------------------------------------------------------\n");
     for (int i = 0; i < topo; i++){
@@ -23,11 +29,12 @@ void lista_tabela(){
     }
 }
 
-// função que conta o rotulo
+// função que retorna o proximo rotulo
 int proximo_rotulo(){
     return rotulo++;
 }
 
+// função que adiciona simbolo na lista, caso haja espaço
 void adiciona_simbolo(char *string){
     if (topo < 100){
         variaveis[topo] = strdup(string);
@@ -35,7 +42,7 @@ void adiciona_simbolo(char *string){
     } else { printf("ERRO ao alocar, mais de 100 variaveis alocadas\n");}
 }
 
-// função que procura no vetor de simbolos
+// função que procura no vetor de simbolos de acordo com string recebida
 int busca_tabela_simbolos(char *string){
     for (int i = 0; i < topo; i++) {
         if (strcmp(string, variaveis[i]) == 0) { 
@@ -52,10 +59,10 @@ typedef enum{
     COMENTARIO,
     AND,
     BEGIN, 
-    BOOLE, // mudanca de BOOL para BOOLE para não confundir com a palavra reservada "bool"
+    BOOLE,
     ELIF, 
     END, 
-    FALSEe, // mudanca de FALSE para FALSEe para não confundir com a palavra reservada "false"
+    FALSEe,
     FOR, 
     IF, 
     INTEGER, 
@@ -486,23 +493,14 @@ TInfoAtomo obter_atomo(){
 // função consome que recebe um Tipo de atomo e o compara com o tipo do ultimo atomo verificado pelo LEXER 
 void consome(TAtomo atomo){
     while (lookahead.atomo == COMENTARIO){ // enquanto indentificar um comentario o imprime porem o ignora 
-        // printf("%d:%s\n",lookahead.linha,msgAtomo[lookahead.atomo]);
         lookahead = obter_atomo();
     }
 
     if(lookahead.atomo == atomo) { // se o tipo de atomo passado na função for igual ao tipo do atomo reconhecido pelo lexer indica que esta de acordo com a gramatica
-        // if (lookahead.atomo == IDENTIFICADOR){
-        //     printf("%d:identificador | %s\n",lookahead.linha, lookahead.atributo_ID);
-        // } else if (lookahead.atomo == NUMERO){
-        //     printf("%d:%d\n",lookahead.linha,lookahead.atributo_numero);
-        // }else {
-        //     printf("%d:%s\n",lookahead.linha,msgAtomo[lookahead.atomo]);
-        // }
         lookahead = obter_atomo();
         while (lookahead.atomo == COMENTARIO){ // enquanto indentificar um comentario o imprime porem o ignora 
-        // printf("%d:%s\n",lookahead.linha,msgAtomo[lookahead.atomo]);
-        lookahead = obter_atomo();
-    }
+            lookahead = obter_atomo();
+        }
     } else { // caso não for igual indica um erro sintatico 
         printf("ERRO sintatico, encontrado [%s] esperado um [%s]\n",msgAtomo[lookahead.atomo],msgAtomo[atomo]);
         exit(0);
@@ -521,35 +519,43 @@ void tipo(){
 }
 
 // <lista_variavel> ::= identificador { “,” identificador }
+// aqui houve mudanças, agora quando recebe verificador = 0 indica a sequencia de 1 ou mais identificadores não devem estar na lista de simbolos, caso verificador = 1 indica que a lista de lidentificadores deve estar na lista
 void lista_variavel(int verificador){
     TInfoAtomo temporario = lookahead;
     consome(IDENTIFICADOR);
     int pos = busca_tabela_simbolos(temporario.atributo_ID);
-    if ((verificador && (pos == -1)) || (!verificador && (pos != -1))){
-        printf("ERRO semantico - %s - %d\n", temporario.atributo_ID, pos);
-        lista_tabela();
+    if (verificador && (pos == -1)){
+        printf("ERRO semantico variavel \"%s\" não declarada na linha: %d\n", temporario.atributo_ID,linha);
+        exit(0);
+    }
+    if (!verificador && (pos != -1)){
+        printf("ERRO semantico variavel \"%s\" ja declarada, na linha: %d\n", temporario.atributo_ID, linha);
         exit(0);
     }
     if (verificador){
-        printf("\tLEIT\n");
-        printf("\tARMZ %d\n", busca_tabela_simbolos(temporario.atributo_ID));
+        strcat(mepa,"\tLEIT\n");
+        sprintf(format, "\tARMZ %d\n", busca_tabela_simbolos(temporario.atributo_ID));
+        strcat(mepa,format);
     } else{
         adiciona_simbolo(temporario.atributo_ID);
     }
-   
     while (lookahead.atomo == VIRGULA){
         consome(VIRGULA);
         TInfoAtomo temporario = lookahead;
         consome(IDENTIFICADOR);
         int pos = busca_tabela_simbolos(temporario.atributo_ID);
-        if ((verificador && (pos == -1)) || (!verificador && (pos != -1))){
-            printf("ERRO semantico - %s - %d\n", temporario.atributo_ID, pos);
-            lista_tabela();
+        if (verificador && (pos == -1)){
+            printf("ERRO semantico variavel \"%s\" não declarada na linha: %d\n", temporario.atributo_ID,linha);
+            exit(0);
+        }
+        if (!verificador && (pos != -1)){
+            printf("ERRO semantico variavel \"%s\" ja declarada, na linha: %d\n", temporario.atributo_ID,linha);
             exit(0);
         }
         if (verificador){
-        printf("\tLEIT\n");
-        printf("\tARMZ %d\n", busca_tabela_simbolos(temporario.atributo_ID));
+            strcat(mepa,"\tLEIT\n");
+            sprintf(format, "\tARMZ %d\n", busca_tabela_simbolos(temporario.atributo_ID));
+            strcat(mepa,format);
         } else{
         adiciona_simbolo(temporario.atributo_ID);
         }
@@ -566,16 +572,22 @@ void fator(){
     TInfoAtomo temporario = lookahead;
     if (lookahead.atomo == IDENTIFICADOR){
         consome(lookahead.atomo);
-        printf("\tCRVL %d\n",busca_tabela_simbolos(temporario.atributo_ID));
+        if (busca_tabela_simbolos(temporario.atributo_ID) == -1){
+            printf("ERRO semantico, variavel \"%s\" não declarada\n",temporario.atributo_ID);
+            exit(0);
+        }
+        sprintf(format, "\tCRVL %d\n",busca_tabela_simbolos(temporario.atributo_ID));
+        strcat(mepa,format);
     } else if (lookahead.atomo == NUMERO){
         consome(lookahead.atomo);
-        printf("\tCRCT %d\n",temporario.atributo_numero);
+        sprintf(format, "\tCRCT %d\n",temporario.atributo_numero);
+        strcat(mepa,format);
     } else if (lookahead.atomo == TRUEe){
         consome(lookahead.atomo);
-        printf("\tCRCT 1\n");
+        strcat(mepa,"\tCRCT 1\n");
     } else if (lookahead.atomo == FALSEe){
         consome(lookahead.atomo);
-        printf("\tCRCT 0\n");
+        strcat(mepa,"\tCRCT 0\n");
     }else if (lookahead.atomo == NOT){
         consome(NOT);
         fator();
@@ -593,7 +605,8 @@ void termo(){
         const char *temp = (lookahead.atomo == VEZES) ? "MULT" : "DIVI";
         consome(lookahead.atomo);
         fator();
-        printf("\t%s\n", temp);
+        sprintf(format, "\t%s\n", temp);
+        strcat(mepa,format);
     }
 }
 
@@ -604,7 +617,8 @@ void expressao_simples(){
         const char *temp = (lookahead.atomo == MAIS) ? "SOMA" : "SUBT";
         consome(lookahead.atomo);
         termo();
-        printf("\t%s\n", temp);
+        sprintf(format, "\t%s\n", temp);
+        strcat(mepa,format);
     }
 }
 
@@ -616,28 +630,28 @@ void expressao_relacional(){
     if (lookahead.atomo == MAIOR_Q){
         consome(lookahead.atomo);
         expressao_simples();
-        printf("\tCMMA\n");
+        strcat(mepa,"\tCMMA\n");
     } else if (lookahead.atomo == MENOR_Q){
         consome(lookahead.atomo);
         expressao_simples();
-        printf("\tCMME\n");
+        strcat(mepa,"\tCMME\n");
     }else if (lookahead.atomo == MAIOR_IGUAL_Q){
         consome(lookahead.atomo);
         expressao_simples();
-        printf("\tCMAG\n");
+        strcat(mepa,"\tCMAG\n");
     }else if (lookahead.atomo == MENOR_IGUAL_Q){
         consome(lookahead.atomo);
         expressao_simples();
-        printf("\tCMEG\n");        
+        strcat(mepa,"\tCMEG\n");        
     }else if (lookahead.atomo == DIFERENTE){
         consome(lookahead.atomo);
         expressao_simples();
-        printf("\tCMDG\n");
+        strcat(mepa,"\tCMDG\n"); 
         
     }else if (lookahead.atomo == IGUAL){
         consome(lookahead.atomo);
         expressao_simples();
-        printf("\tCMIG\n");
+        strcat(mepa,"\tCMIG\n"); 
     }
 }
 
@@ -647,7 +661,7 @@ void expressao_logica(){
         while (lookahead.atomo == AND){
         consome(AND);
         expressao_relacional();
-        printf("\tCONJ\n");
+        strcat(mepa,"\tCONJ\n"); 
     }
 }
 
@@ -657,7 +671,7 @@ void expressao(){
     while (lookahead.atomo == OR){
         consome(OR);
         expressao_logica();
-        printf("\tDISJ\n");
+        strcat(mepa,"\tDISJ\n"); 
     }
 }
 
@@ -668,12 +682,13 @@ void comando(){
         TInfoAtomo temporario = lookahead;
         consome(IDENTIFICADOR);
         if (busca_tabela_simbolos(temporario.atributo_ID) == -1){
-            printf("ERRO semantico, varaivel \"%s\" não declarada",temporario.atributo_ID);
+            printf("ERRO semantico, variavel \"%s\" não declarada\n",temporario.atributo_ID);
             exit(0);
         }
         consome(TO);
         expressao();
-        printf("\tARMZ %d\n",busca_tabela_simbolos(temporario.atributo_ID));
+        sprintf(format, "\tARMZ %d\n",busca_tabela_simbolos(temporario.atributo_ID));
+        strcat(mepa,format);
 
 
     } else if (lookahead.atomo == IF){ // para comando condicional
@@ -682,15 +697,19 @@ void comando(){
         consome(IF);
         expressao();
         consome(D_PONTOS);
-        printf("\tDSVF L%d\n",L1);
+        sprintf(format,"\tDSVF L%d\n",L1);
+        strcat(mepa,format);
         comando();
-        printf("\tDSVS L%d\n",L2);
-        printf("L%d: NADA\n",L1);
+        sprintf(format,"\tDSVS L%d\n",L2);
+        strcat(mepa,format);
+        sprintf(format,"L%d: NADA\n",L1);
+        strcat(mepa,format);
         if (lookahead.atomo == ELIF){ // caso em seguida tenha um elif (no maximo 1 elif)
             consome(ELIF);
             comando();
         }
-        printf("L%d: NADA\n",L2);
+        sprintf(format,"L%d: NADA\n",L2);
+        strcat(mepa,format);
 
 
     } else if (lookahead.atomo == FOR){ // comando de repetição
@@ -699,30 +718,36 @@ void comando(){
         TInfoAtomo temporario = lookahead;
         consome(IDENTIFICADOR);
         if (busca_tabela_simbolos(temporario.atributo_ID) == -1){
-            printf("ERRO semantico, varaivel \"%s\" não declarada",temporario.atributo_ID);
+            printf("ERRO semantico, variavel \"%s\" não declarada\n",temporario.atributo_ID);
             exit(0);
         }
         consome(OF);
         expressao();
-        printf("\tARMZ %d\n",busca_tabela_simbolos(temporario.atributo_ID));
+        sprintf(format, "\tARMZ %d\n",busca_tabela_simbolos(temporario.atributo_ID));
+        strcat(mepa,format);
         int L1 = proximo_rotulo();
-        printf("L%d: NADA\n",L1);
+        sprintf(format,"L%d: NADA\n",L1);
+        strcat(mepa,format);
         consome(TO);
-        printf("\tCRVL %d\n",busca_tabela_simbolos(temporario.atributo_ID));
+        sprintf(format,"\tCRVL %d\n",busca_tabela_simbolos(temporario.atributo_ID));
+        strcat(mepa,format);
         expressao();
-        printf("\tCMEG\n");
+        strcat(mepa,"\tCMEG\n");
         int L2 = proximo_rotulo();
-        printf("\tDSVF L%d\n",L2);
+        sprintf(format,"\tDSVF L%d\n",L2);
+        strcat(mepa,format);
         consome(D_PONTOS);
         comando();
-        printf("\tCRVL %d\n",busca_tabela_simbolos(temporario.atributo_ID));
-        printf("\tCRCT 1\n");
-        printf("\tSOMA\n");
-        printf("\tARMZ %d\n",busca_tabela_simbolos(temporario.atributo_ID));
-        printf("\tDSVS L%d\n",L1);
-        printf("L%d: NADA\n",L2);
-
-
+        sprintf(format, "\tCRVL %d\n",busca_tabela_simbolos(temporario.atributo_ID));
+        strcat(mepa,format);
+        strcat(mepa,"\tCRCT 1\n");
+        strcat(mepa,"\tSOMA\n");
+        sprintf(format, "\tARMZ %d\n",busca_tabela_simbolos(temporario.atributo_ID));
+        strcat(mepa,format);
+        sprintf(format,"\tDSVS L%d\n",L1);
+        strcat(mepa,format);
+        sprintf(format, "L%d: NADA\n",L2);
+        strcat(mepa,format);
     }else if (lookahead.atomo == READ){ // comando de entrada
         consome(READ);
         consome(ABRE_PARENTESES);
@@ -732,11 +757,11 @@ void comando(){
         consome(WRITE);
         consome(ABRE_PARENTESES);
         expressao();
-        printf("\tIMPR\n");
+        strcat(mepa,"\tIMPR\n");
         while (lookahead.atomo == VIRGULA){
             consome(VIRGULA);
             expressao();
-            printf("\tIMPR\n");
+            strcat(mepa,"\tIMPR\n");
         }
         consome(FECHA_PARENTESES);
 
@@ -775,7 +800,8 @@ void declaracao_de_variaveis(){
 // <bloco>::= <declaracao_de_variaveis> <comando_composto>
 void bloco(){
     declaracao_de_variaveis();
-    printf("\tAMEM %d\n",topo);
+    sprintf(format, "\tAMEM %d\n",topo);
+    strcat(mepa,format);
     comando_composto();
 }
 
@@ -784,11 +810,11 @@ void programa(){
     consome(PROGRAM);
     consome(IDENTIFICADOR);
     consome(PONTO_VIRGULA);
-    printf("\tINPP\n");
+    strcat(mepa,"\tINPP\n");
     bloco();
     consome(PONTO);
     consome(EOS);
-    printf("\tPARA\n");
+    strcat(mepa,"\tPARA\n");
 }
 
 
@@ -803,12 +829,20 @@ int main(int argc, char *argv[]) {
         return 0;
     }
     
+    mepa = malloc(1024); // Por exemplo, 1024 bytes para o buffer
+    format = malloc(256);
+    mepa[0] = '\0';
+    format[0] = '\0';
+
     buffer = ler_arquivo(arquivo);
     fclose(arquivo);
 
     lookahead = obter_atomo();
     programa();
+    printf("%s",mepa);
     lista_tabela();
     printf("\nfim da analise :D \n");
+    free(mepa);
+    free(format);
     return 0;
 }

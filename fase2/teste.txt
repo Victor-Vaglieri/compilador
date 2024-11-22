@@ -1,5 +1,5 @@
 program t4;
-integer a, b;
+integer a,b;
 boolean ambos_maiores;
 begin
   read(a);
