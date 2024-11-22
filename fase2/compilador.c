@@ -519,7 +519,8 @@ void tipo(){
 }
 
 // <lista_variavel> ::= identificador { “,” identificador }
-// aqui houve mudanças, agora quando recebe verificador = 0 indica a sequencia de 1 ou mais identificadores não devem estar na lista de simbolos, caso verificador = 1 indica que a lista de lidentificadores deve estar na lista
+// aqui houve mudanças, agora quando recebe verificador = 0 indica a sequencia de 1 ou mais identificadores não devem estar na lista de simbolos e se deve pesquisa los um a um para confirmar, 
+// caso verificador = 1 indica que a lista de lidentificadores deve estar na lista e se deve pesquisa los um a um 
 void lista_variavel(int verificador){
     TInfoAtomo temporario = lookahead;
     consome(IDENTIFICADOR);
