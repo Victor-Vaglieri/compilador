@@ -12,8 +12,8 @@ char *buffer = NULL; // string para o futuro arquivo
 int linhas_de_comentario = 0; // variavel para compensar comentarios de varias linhas
 
 
-char *mepa = NULL; // TODO
-char *format = NULL; // TODO
+char *mepa = NULL; // variavel que guardará todas instruções mepa
+char *format = NULL; // varaivel auxiliar para formatar instruçõa mepa
 
 
 char *variaveis[20]; // lista de simbolos/variaveis
